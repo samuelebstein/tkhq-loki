@@ -26,10 +26,14 @@ type Metrics struct {
 	inflightRequests  prometheus.Summary
 	tasksRequeued     prometheus.Counter
 	taskLost          prometheus.Counter
+	tasksFailed       prometheus.Counter
 
 	buildStarted   prometheus.Counter
 	buildCompleted *prometheus.CounterVec
 	buildTime      *prometheus.HistogramVec
+
+	blocksDeleted prometheus.Counter
+	metasDeleted  prometheus.Counter
 
 	tenantsDiscovered prometheus.Counter
 }
@@ -79,6 +83,12 @@ func NewMetrics(
 			Name:      "tasks_lost_total",
 			Help:      "Total number of tasks lost due to not being picked up by a builder and failed to be requeued.",
 		}),
+		tasksFailed: promauto.With(r).NewCounter(prometheus.CounterOpts{
+			Namespace: metricsNamespace,
+			Subsystem: metricsSubsystem,
+			Name:      "tasks_failed_total",
+			Help:      "Total number of tasks that failed to be processed by builders (after the configured retries).",
+		}),
 
 		buildStarted: promauto.With(r).NewCounter(prometheus.CounterOpts{
 			Namespace: metricsNamespace,
@@ -99,6 +109,19 @@ func NewMetrics(
 			Help:      "Time spent during a builds cycle.",
 			Buckets:   prometheus.DefBuckets,
 		}, []string{"status"}),
+
+		blocksDeleted: promauto.With(r).NewCounter(prometheus.CounterOpts{
+			Namespace: metricsNamespace,
+			Subsystem: metricsSubsystem,
+			Name:      "blocks_deleted_total",
+			Help:      "Number of blocks deleted",
+		}),
+		metasDeleted: promauto.With(r).NewCounter(prometheus.CounterOpts{
+			Namespace: metricsNamespace,
+			Subsystem: metricsSubsystem,
+			Name:      "metas_deleted_total",
+			Help:      "Number of metas deleted",
+		}),
 
 		tenantsDiscovered: promauto.With(r).NewCounter(prometheus.CounterOpts{
 			Namespace: metricsNamespace,
